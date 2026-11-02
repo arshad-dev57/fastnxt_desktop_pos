@@ -1,6 +1,6 @@
-appId: com.bisonstechs.pos
-productName: Bisonstechs POS
-copyright: Copyright © Bisonstechs
+appId: com.fastnxt.pos
+productName: FastNxt POS
+copyright: Copyright © FastNxt
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 
 directories:
@@ -31,7 +31,7 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: Bisonstechs POS
+  shortcutName: FastNxt POS
   installerIcon: assets/icon.ico
   uninstallerIcon: assets/icon.ico
 
@@ -54,6 +54,6 @@ linux:
   target:
     - AppImage
     - deb
-  executableName: bisonstechs-pos
+  executableName: fastnxt-pos
 
 publish: null

@@ -711,7 +711,7 @@ function printReport() {
       .kpi b{display:block;font-size:15px;} .kpi small{color:#64748b;font-size:10px;}
       .rpt-card{margin-top:12px;break-inside:avoid;} .rpt-card h4{margin:0 0 4px;font-size:13px;}
       .rpt-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-      .rpt-chart{width:100%;height:150px;} .rpt-bar{fill:#014582;} .rpt-axis{font-size:10px;fill:#64748b;text-anchor:middle;} .rpt-baseline{stroke:#cbd5e1;}
+      .rpt-chart{width:100%;height:150px;} .rpt-bar{fill:#111111;} .rpt-axis{font-size:10px;fill:#64748b;text-anchor:middle;} .rpt-baseline{stroke:#cbd5e1;}
       .strong td{font-weight:700;border-top:1px solid #94a3b8;} small{display:block;color:#64748b;} .neg{color:#b91c1c;}
       .cust-hint{color:#64748b;font-size:11px;} .rpt-title{display:none;}
     </style>

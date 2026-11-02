@@ -1104,7 +1104,7 @@ function createMainWindow() {
     show: false,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: '#0b2744',
+    backgroundColor: '#0a0a0a',
     icon: ICON,
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
@@ -3237,11 +3237,11 @@ function registerIpc() {
       return {
         success: true,
         data: {
-          storeName: 'Bison POS',
+          storeName: 'FastNxt POS',
           address: 'Main St',
           phone: '000-000-0000',
-          email: 'info@bison.com',
-          website: 'www.bison.com',
+          email: 'info@fastnxt.com',
+          website: 'www.fastnxt.com',
           footer: 'Thank you for shopping with us!',
         }
       };

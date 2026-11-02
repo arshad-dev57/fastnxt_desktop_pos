@@ -1,4 +1,4 @@
-# Bisonstechs POS — desktop release workflow
+# FastNxt POS — desktop release workflow
 
 ## CI builds (unsigned)
 
@@ -6,9 +6,9 @@ On every push/PR to `main` / `master`, [`.github/workflows/build-desktop.yml`](.
 
 | Job | Runner | Command | Artifact |
 |-----|--------|---------|----------|
-| Windows x64 | `windows-latest` | `npm run build:win` | `Bisonstechs POS-<version>-win-x64.exe` |
-| macOS Apple Silicon | `macos-latest` | `npm run build:mac:arm64` | `Bisonstechs POS-<version>-mac-arm64.dmg` |
-| macOS Intel | `macos-latest` | `npm run build:mac:x64` | `Bisonstechs POS-<version>-mac-x64.dmg` |
+| Windows x64 | `windows-latest` | `npm run build:win` | `FastNxt POS-<version>-win-x64.exe` |
+| macOS Apple Silicon | `macos-latest` | `npm run build:mac:arm64` | `FastNxt POS-<version>-mac-arm64.dmg` |
+| macOS Intel | `macos-latest` | `npm run build:mac:x64` | `FastNxt POS-<version>-mac-x64.dmg` |
 
 Installers are uploaded as **GitHub Actions artifacts** (not committed to git).
 
@@ -64,8 +64,8 @@ NEXT_PUBLIC_POS_DESKTOP_GITHUB_REPO=arshad-dev57/accounting-desktop
 Or override individual URLs:
 
 ```env
-NEXT_PUBLIC_DESKTOP_DOWNLOAD_MAC=https://github.com/.../releases/download/v1.0.0/Bisonstechs%20POS-1.0.0-mac-arm64.dmg
-NEXT_PUBLIC_DESKTOP_DOWNLOAD_WIN=https://github.com/.../releases/download/v1.0.0/Bisonstechs%20POS-1.0.0-win-x64.exe
+NEXT_PUBLIC_DESKTOP_DOWNLOAD_MAC=https://github.com/.../releases/download/v1.0.0/FastNxt%20POS-1.0.0-mac-arm64.dmg
+NEXT_PUBLIC_DESKTOP_DOWNLOAD_WIN=https://github.com/.../releases/download/v1.0.0/FastNxt%20POS-1.0.0-win-x64.exe
 NEXT_PUBLIC_DESKTOP_DOWNLOAD_MAC_INTEL=...
 ```
 

@@ -65,7 +65,7 @@
       #code-scanner-video { width: 100%; height: 100%; object-fit: cover; }
       #code-scanner-video-wrap .scan-frame {
         position: absolute; inset: 18%;
-        border: 2px solid #014582; border-radius: 10px;
+        border: 2px solid #111111; border-radius: 10px;
         box-shadow: 0 0 0 9999px rgba(0,0,0,.35); pointer-events: none;
       }
       #code-scanner-status {
@@ -92,7 +92,7 @@
       }
       #code-scanner-manual button {
         height: 36px; border: 0; border-radius: 8px; padding: 0 14px;
-        background: #014582; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer;
+        background: #111111; color: #fff; font-weight: 700; font-size: 12px; cursor: pointer;
       }
     `;
     document.head.appendChild(style);

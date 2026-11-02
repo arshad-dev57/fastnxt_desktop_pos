@@ -12,7 +12,7 @@ const { shell } = require('electron');
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 const TOKEN_FILE = 'google-drive-tokens.json';
-const FOLDER_NAME = 'Bisonstechs POS Backups';
+const FOLDER_NAME = 'FastNxt POS Backups';
 
 let userDataPath = '';
 let oauthServer = null;
@@ -247,7 +247,7 @@ function connect(settings = {}) {
 
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(
-          '<h2>Google Drive connected</h2><p>You can close this window and return to Bisonstechs POS.</p>'
+          '<h2>Google Drive connected</h2><p>You can close this window and return to FastNxt POS.</p>'
         );
         stopOAuthServer();
         resolve({ email: tokens.email, connected: true });
@@ -326,7 +326,7 @@ async function uploadFile(settings, { localPath, fileName, folderId }) {
   const accessToken = await getAccessToken(settings);
   const parentId = folderId || (await ensureBackupFolder(settings));
   const fileBuf = fs.readFileSync(localPath);
-  const boundary = 'bisonstechs_pos_backup_' + Date.now();
+  const boundary = 'fastnxt_pos_backup_' + Date.now();
   const meta = JSON.stringify({
     name: fileName,
     parents: [parentId],

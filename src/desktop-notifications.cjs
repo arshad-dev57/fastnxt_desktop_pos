@@ -80,7 +80,7 @@ function showNativeNotification(notification) {
   const data = parseData(notification);
   const kitchen = isKitchenOrderNotification(notification);
   const native = new Notification({
-    title: notification.title || 'Bisonstechs',
+    title: notification.title || 'FastNxt',
     body: notification.message || '',
     silent: kitchen,
   });

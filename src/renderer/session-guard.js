@@ -34,7 +34,7 @@
         background: #fff;
         border-radius: 16px;
         padding: 24px 22px 18px;
-        box-shadow: 0 24px 60px rgba(1, 69, 130, 0.22);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
         font-family: Inter, system-ui, sans-serif;
       }
       #bt-access-guard h2 {
@@ -45,7 +45,7 @@
       }
       #bt-access-guard button {
         width: 100%; height: 42px; border: 0; border-radius: 10px;
-        background: #014582; color: #fff; font-weight: 700; font-size: 14px;
+        background: #111111; color: #fff; font-weight: 700; font-size: 14px;
         cursor: pointer;
       }
     `;

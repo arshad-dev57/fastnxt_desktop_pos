@@ -1,8 +1,8 @@
 {
   "name": "accounting-desktop-app",
   "version": "1.0.0",
-  "description": "Bisonstechs POS desktop application. Separate from accounting-web-app.",
-  "author": "Bisonstechs",
+  "description": "FastNxt POS desktop application. Separate from accounting-web-app.",
+  "author": "FastNxt",
   "private": true,
   "main": "src/main.cjs",
   "scripts": {
@@ -15,7 +15,7 @@
     "build:mac:arm64": "electron-builder --mac dmg zip --arm64",
     "build:mac:x64": "electron-builder --mac dmg zip --x64",
     "build:linux": "electron-builder --linux AppImage deb",
-    "copy-installer:web": "mkdir -p ../accounting-web-app/public/downloads && cp \"dist-electron/Bisonstechs POS-\"*\"-mac-arm64.dmg\" ../accounting-web-app/public/downloads/Bisonstechs-POS-1.0.0-mac-arm64.dmg"
+    "copy-installer:web": "mkdir -p ../accounting-web-app/public/downloads && cp \"dist-electron/FastNxt POS-\"*\"-mac-arm64.dmg\" ../accounting-web-app/public/downloads/FastNxt-POS-1.0.0-mac-arm64.dmg"
   },
   "dependencies": {
     "adm-zip": "^0.6.1",

@@ -468,7 +468,7 @@ function renderBackupStatus(data) {
       ? `Last backup: ${formatBackupWhen(data.lastBackupAt)} (${data.lastBackupStatus || '—'})`
       : 'No backup yet';
     const err = data.lastBackupError ? `<br><span style="color:#b91c1c;">${data.lastBackupError}</span>` : '';
-    statusEl.innerHTML = `${conn} · ${oauth}<br>${last}${err}<br>Drive folder: <b>${data.folderName || 'Bisonstechs POS Backups'}</b>`;
+    statusEl.innerHTML = `${conn} · ${oauth}<br>${last}${err}<br>Drive folder: <b>${data.folderName || 'FastNxt POS Backups'}</b>`;
   }
   const en = document.getElementById('backup-enabled');
   if (en) en.checked = Boolean(data.enabled);
@@ -1982,8 +1982,8 @@ function promptProductQty(p, mode = 'add') {
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <input id="pos-qty-input" type="number" min="0.001" step="0.001" inputmode="decimal"
           value="${initial}" placeholder="${uom.allowFractional ? 'e.g. 1.5' : 'e.g. 1'}"
-          style="flex:1;border:2px solid #014582;border-radius:12px;padding:12px;font-size:24px;font-weight:700;text-align:center;outline:none;" />
-        <div style="min-width:56px;display:flex;align-items:center;justify-content:center;background:#e0f2fe;color:#014582;border-radius:12px;font-weight:700;font-size:13px;">
+          style="flex:1;border:2px solid #111111;border-radius:12px;padding:12px;font-size:24px;font-weight:700;text-align:center;outline:none;" />
+        <div style="min-width:56px;display:flex;align-items:center;justify-content:center;background:#e0f2fe;color:#111111;border-radius:12px;font-weight:700;font-size:13px;">
           ${uom.salesUnit}
         </div>
       </div>
@@ -1991,7 +1991,7 @@ function promptProductQty(p, mode = 'add') {
       <p id="pos-qty-error" style="display:none;color:#dc2626;font-size:12px;margin:0 0 10px;"></p>
       <div style="display:flex;gap:8px;">
         <button type="button" id="pos-qty-cancel" style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:12px;background:#fff;font-weight:600;cursor:pointer;">Cancel</button>
-        <button type="button" id="pos-qty-ok" style="flex:1;padding:10px;border:none;border-radius:12px;background:#014582;color:#fff;font-weight:700;cursor:pointer;">
+        <button type="button" id="pos-qty-ok" style="flex:1;padding:10px;border:none;border-radius:12px;background:#111111;color:#fff;font-weight:700;cursor:pointer;">
           ${mode === 'edit' ? 'Update' : 'Add to cart'}
         </button>
       </div>
@@ -2938,7 +2938,7 @@ function renderReceipt() {
     let t = tpl;
     const company = window.PosReceipt
       ? window.PosReceipt.resolveReceiptCompany(companyProfile, tpl)
-      : (companyProfile || { name: 'BisonTechs POS', email: '', phone: '', address: {} });
+      : (companyProfile || { name: 'FastNxt POS', email: '', phone: '', address: {} });
     // Extra fields the builder expects for the totals/paid/change
     const s = Object.assign({}, lastSale, {
       subtotal: lastSale.subtotal ?? calculateTotalsFor(lastSale),

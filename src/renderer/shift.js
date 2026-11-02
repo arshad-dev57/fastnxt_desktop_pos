@@ -73,7 +73,7 @@ async function boot() {
   const user = sessionUser;
   userEl.textContent = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || '';
 
-  // Show logged-in company name/logo (not generic Bisonstechs)
+  // Show logged-in company name/logo (not generic FastNxt)
   try {
     let companyName =
       user.company?.name ||

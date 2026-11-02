@@ -27,7 +27,7 @@ async function setupAutoUpdate(app) {
     const { response } = await dialog.showMessageBox({
       type: 'info',
       title: 'Update available',
-      message: `Bisonstechs POS ${info.version} is available.`,
+      message: `FastNxt POS ${info.version} is available.`,
       detail: 'Download and install now? The app will restart after the update.',
       buttons: ['Update', 'Later'],
       defaultId: 0,

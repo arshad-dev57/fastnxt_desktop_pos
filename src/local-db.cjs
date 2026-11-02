@@ -1,5 +1,5 @@
 /**
- * local-db.cjs — Offline JSON file-based database for Bisonstechs POS Desktop.
+ * local-db.cjs — Offline JSON file-based database for FastNxt POS Desktop.
  * Stores all caches (products, categories, customers, tax) and queues (sales, returns, shifts, held).
  * Runs completely locally on the host machine.
  */
@@ -353,11 +353,11 @@ function addShiftToHistory(shift) {
 // ─── RECEIPT SETTINGS CACHE ───────────────────────────────────────────────────
 function getReceiptSettings() {
   return readJson('receipt_settings.json', {
-    storeName: 'Bison POS',
+    storeName: 'FastNxt POS',
     address: 'Main St',
     phone: '000-000-0000',
-    email: 'info@bison.com',
-    website: 'www.bison.com',
+    email: 'info@fastnxt.com',
+    website: 'www.fastnxt.com',
     footer: 'Thank you for shopping with us!',
   });
 }
