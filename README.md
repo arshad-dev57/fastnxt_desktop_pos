@@ -1,4 +1,4 @@
-# Bisonstechs POS Desktop
+# FastNxt POS Desktop
 
 Standalone Electron app. **Separate folder** from `accounting-web-app` — same layout as the other projects:
 
