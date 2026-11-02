@@ -10,7 +10,7 @@ dotenv.config({ path: path.join(__dirname, '..', '.env.local'), override: true }
 
 const DEFAULT_LOCAL = 'http://127.0.0.1:3000';
 const DEFAULT_PROD = 'https://app.bisonstechs.com';
-const DEFAULT_API = 'https://accountbackend-production-eaf5.up.railway.app';
+const DEFAULT_API = 'https://accountbackend-production-9603.up.railway.app';
 
 function stripSlash(url) {
   return String(url || '').trim().replace(/\/+$/, '');
