@@ -16,6 +16,7 @@ function getActiveCompanyId() {
   return activeCompanyId;
 }
 
+
 async function request(accessToken, method, pathname, body) {
   const base = config.resolveApiUrl();
   const url = `${base}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;

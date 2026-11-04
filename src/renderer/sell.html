@@ -1793,6 +1793,9 @@
           <button class="tab-btn" data-tab="stock">
             <span>Stock In</span>
           </button>
+          <button class="tab-btn" data-tab="labels">
+            <span>Labels</span>
+          </button>
           <button class="tab-btn" data-tab="settings">
             <span>Settings</span>
           </button>
@@ -2173,6 +2176,16 @@
                 <button class="btn-add-custom" id="prod-add" type="button" style="height: 36px; border: 0; background: var(--brand); color: #fff; border-radius: 8px; padding: 0 14px; font-weight: 700; display: flex; align-items: center; gap: 6px;">+ Add Product</button>
               </div>
               <div id="prod-table"></div>
+            </div>
+          </div>
+
+          <!-- ─── LABELS: Barcode & QR Designer ───────────────────── -->
+          <div class="view-panel" id="tab-labels">
+            <div class="panel-content" style="max-width:1100px;">
+              <div class="panel-header">
+                <h2>Barcode &amp; QR Labels</h2>
+              </div>
+              <div id="label-designer-root"></div>
             </div>
           </div>
 
@@ -2789,6 +2802,10 @@
                 </div>
                 <input class="pf-input" id="pf-barcode" autocomplete="off" placeholder="Scan or auto-generate a barcode" style="margin-top:8px;" />
                 <div id="pf-barcode-preview" style="margin-top:12px;padding:12px;border:1px dashed #cbd5e1;border-radius:10px;background:#fff;min-height:88px;display:flex;align-items:center;justify-content:center;"></div>
+                <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn-nav-action ghost" id="pf-print-barcode">Print barcode label</button>
+                  <button type="button" class="btn-nav-action ghost" id="pf-print-barcode-qty">Print qty…</button>
+                </div>
               </div>
               <div class="pf-span" style="border:1px solid var(--line);border-radius:12px;padding:12px;background:#f8fafc;">
                 <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
@@ -2803,6 +2820,9 @@
                 </div>
                 <input class="pf-input" id="pf-qrCode" autocomplete="off" placeholder="Scan or auto-generate a QR number" style="margin-top:8px;" />
                 <div id="pf-qr-preview" style="margin-top:12px;padding:12px;border:1px dashed #cbd5e1;border-radius:10px;background:#fff;min-height:140px;display:flex;align-items:center;justify-content:center;"></div>
+                <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn-nav-action ghost" id="pf-print-qr">Print QR label</button>
+                </div>
               </div>
               <div><label class="pf-label">Product Type</label><select class="pf-select" id="pf-productType"><option value="Physical">Physical</option><option value="Service">Service</option><option value="Digital">Digital</option><option value="Raw Material">Raw Material</option></select></div>
               <div class="pf-check"><input type="checkbox" id="pf-isActive" checked /><label for="pf-isActive">Active</label></div>
@@ -2962,11 +2982,14 @@
         <p id="sync-overlay-msg">Pulling latest categories, products and customers from the cloud.</p>
       </div>
     </div>
+    <link rel="stylesheet" href="./label-designer.css" />
     <script src="./session-guard.js"></script>
     <script src="./location.js"></script>
     <script src="./scan-code.js"></script>
     <script src="./pos-receipt.js"></script>
     <script src="./product-codes.js"></script>
+    <script src="./label-render.js"></script>
+    <script src="./label-designer.js"></script>
     <script src="./sell.js"></script>
     <script src="./pos-customers.js"></script>
     <script src="./pos-reports.js"></script>

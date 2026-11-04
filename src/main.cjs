@@ -43,6 +43,10 @@ const masterSqlite = require('./master-sqlite.cjs');
 const masterSync = require('./master-sync.cjs');
 const machineInfo = require('./machine-info.cjs');
 const driveBackup = require('./drive-backup/service.cjs');
+const labelTemplatesStore = require('./label-templates-store.cjs');
+const barcodeSvg = require('./barcode-svg.cjs');
+
+labelTemplatesStore.bind(localDb);
 
 const isMac = process.platform === 'darwin';
 const isDev = !app.isPackaged;
@@ -3935,22 +3939,114 @@ function registerIpc() {
     }
   });
 
-  ipcMain.handle('codes:qrSvg', async (_event, { text, size } = {}) => {
+  ipcMain.handle('codes:qrSvg', async (_event, payload = {}) => {
     try {
       const QRCode = require('qrcode');
-      const value = String(text || '').trim();
+      const value = String(payload.text || '').trim();
       if (!value) return { success: false, message: 'Empty QR value' };
-      const px = Math.max(96, Math.min(320, Number(size) || 160));
+      const px = Math.max(64, Math.min(512, Number(payload.size) || 160));
+      const opts = payload.options || {};
+      const ecc = String(opts.errorCorrection || opts.errorCorrectionLevel || 'M').toUpperCase();
+      const dark = String(opts.fgColor || opts.dark || '#000000');
+      const light = String(opts.bgColor || opts.light || '#ffffff');
       const svg = await QRCode.toString(value, {
         type: 'svg',
         width: px,
         margin: 2,
-        errorCorrectionLevel: 'M',
-        color: { dark: '#000000', light: '#ffffff' },
+        errorCorrectionLevel: ['L', 'M', 'Q', 'H'].includes(ecc) ? ecc : 'M',
+        color: { dark, light },
       });
-      return { success: true, svg };
+      return { success: true, svg, value };
     } catch (err) {
       return { success: false, message: err.message || 'QR render failed' };
+    }
+  });
+
+  ipcMain.handle('codes:barcodeSvg', async (_event, payload = {}) => {
+    try {
+      return await barcodeSvg.barcodeToSvg(payload || {});
+    } catch (err) {
+      return { success: false, message: err.message || 'Barcode render failed' };
+    }
+  });
+
+  ipcMain.handle('labels:list', async () => {
+    const auth = requireAuth();
+    if (!auth.ok) return auth.result;
+    try {
+      return labelTemplatesStore.listTemplates();
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to list templates' };
+    }
+  });
+
+  ipcMain.handle('labels:get', async (_event, id) => {
+    const auth = requireAuth();
+    if (!auth.ok) return auth.result;
+    try {
+      return labelTemplatesStore.getTemplate(id);
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to get template' };
+    }
+  });
+
+  ipcMain.handle('labels:getDefault', async (_event, kind) => {
+    const auth = requireAuth();
+    if (!auth.ok) return auth.result;
+    try {
+      return labelTemplatesStore.getDefaultTemplate(kind);
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to get default template' };
+    }
+  });
+
+  ipcMain.handle('labels:save', async (_event, body) => {
+    const auth = requireAuth();
+    if (!auth.ok) return auth.result;
+    try {
+      return labelTemplatesStore.saveTemplate(body);
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to save template' };
+    }
+  });
+
+  ipcMain.handle('labels:duplicate', async (_event, id) => {
+    const auth = requireAuth();
+    if (!auth.ok) return auth.result;
+    try {
+      return labelTemplatesStore.duplicateTemplate(id);
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to duplicate template' };
+    }
+  });
+
+  ipcMain.handle('labels:delete', async (_event, id) => {
+    const auth = requireAuth();
+    if (!auth.ok) return auth.result;
+    try {
+      return labelTemplatesStore.deleteTemplate(id);
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to delete template' };
+    }
+  });
+
+  ipcMain.handle('labels:setDefault', async (_event, id) => {
+    const auth = requireAuth();
+    if (!auth.ok) return auth.result;
+    try {
+      return labelTemplatesStore.setDefault(id);
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to set default' };
+    }
+  });
+
+  ipcMain.handle('labels:resetDefaults', async () => {
+    const auth = requireAuth();
+    if (!auth.ok) return auth.result;
+    try {
+      return labelTemplatesStore.resetDefaults();
+    } catch (err) {
+      return { success: false, message: err.message || 'Failed to reset defaults' };
     }
   });
 }

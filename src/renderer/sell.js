@@ -275,16 +275,16 @@ function collectReceiptSettingsForm() {
   return next;
 }
 
-function renderReceiptSettingsPreview() {
+async function renderReceiptSettingsPreview() {
   const box = document.getElementById('receipt-settings-preview');
   if (!box || !window.PosReceipt) return;
   const next = collectReceiptSettingsForm();
   const company = window.PosReceipt.resolveReceiptCompany(companyProfile, next);
-  box.innerHTML = window.PosReceipt.buildReceiptHtml(
-    window.PosReceipt.sampleReceiptSale(),
-    company,
-    next
-  );
+  const sample = window.PosReceipt.sampleReceiptSale();
+  box.innerHTML = window.PosReceipt.buildReceiptHtml(sample, company, next);
+  if (typeof window.PosReceipt.applyLabelScanCodes === 'function') {
+    try { await window.PosReceipt.applyLabelScanCodes(box, sample); } catch (_) { /* ignore */ }
+  }
 }
 
 function fillReceiptSettingsForm() {
@@ -388,6 +388,17 @@ function saveLocalSettings() {
 }
 
 document.getElementById('btn-save-settings').addEventListener('click', saveLocalSettings);
+
+let labelDesignerInstance = null;
+async function ensureLabelDesigner() {
+  const root = document.getElementById('label-designer-root');
+  if (!root || !window.mountLabelDesigner) return;
+  if (labelDesignerInstance) {
+    try { await labelDesignerInstance.loadTemplates(); labelDesignerInstance.renderAll(); } catch (_) { /* ignore */ }
+    return;
+  }
+  labelDesignerInstance = await window.mountLabelDesigner('#label-designer-root');
+}
 document.getElementById('btn-save-receipt-settings')?.addEventListener('click', saveReceiptSettings);
 document.getElementById('receipt-settings-card')?.addEventListener('input', renderReceiptSettingsPreview);
 document.getElementById('receipt-settings-card')?.addEventListener('change', renderReceiptSettingsPreview);
@@ -1039,6 +1050,9 @@ function setupTabs() {
       if (targetTab === 'sales') { try { loadSalesRegister(); } catch (e) { console.warn('loadSalesRegister not defined', e); } }
       if (targetTab === 'categories') { try { loadLocalCatalog(); } catch (e) { console.warn('loadLocalCatalog not defined', e); } }
       if (targetTab === 'products') { try { loadLocalProducts(); } catch (e) { console.warn('loadLocalProducts not defined', e); } }
+      if (targetTab === 'labels') {
+        try { ensureLabelDesigner(); } catch (e) { console.warn('ensureLabelDesigner failed', e); }
+      }
       if (targetTab === 'settings') {
         try { loadMachineInfo(); } catch (e) { console.warn('loadMachineInfo not defined', e); }
         try { fillReceiptSettingsForm(); } catch (e) { console.warn('fillReceiptSettingsForm not defined', e); }
@@ -2928,7 +2942,7 @@ function openSaleReceipt(saleData, extras = {}) {
   }
 }
 
-function renderReceipt() {
+async function renderReceipt() {
   const box = document.getElementById('receipt-paper-box');
   if (!lastSale) return;
   try {
@@ -2936,6 +2950,10 @@ function renderReceipt() {
       ? window.PosReceipt.loadReceiptTemplate()
       : null;
     let t = tpl;
+    // Ensure receipt barcode/QR block is enabled so Labels design can show
+    if (t && t.showBarcode === false) {
+      t = Object.assign({}, t, { showBarcode: true });
+    }
     const company = window.PosReceipt
       ? window.PosReceipt.resolveReceiptCompany(companyProfile, tpl)
       : (companyProfile || { name: 'FastNxt POS', email: '', phone: '', address: {} });
@@ -2950,6 +2968,9 @@ function renderReceipt() {
       const html = window.PosReceipt.buildReceiptHtml(s, company, t);
       // Wrap with proper class for printReceiptNode
       box.innerHTML = '<div class="pos-receipt-paper">' + html + '</div>';
+      if (typeof window.PosReceipt.applyLabelScanCodes === 'function') {
+        await window.PosReceipt.applyLabelScanCodes(box, s);
+      }
       return;
     }
   } catch (err) {
@@ -4140,17 +4161,45 @@ async function refreshProductCodePreviews() {
     if (qrEl) qrEl.innerHTML = pfVal('qrCode') ? `<b>${pfVal('qrCode')}</b>` : '';
     return;
   }
-  if (bcEl) bcEl.innerHTML = codes.productBarcodeSvg(pfVal('barcode'), 340);
-  if (!qrEl) return;
+
   refreshProductCodePreviews._tok = (refreshProductCodePreviews._tok || 0) + 1;
   const token = refreshProductCodePreviews._tok;
-  // Debounce QR IPC while typing
   clearTimeout(_prodCodePreviewTimer);
   await new Promise((r) => {
     _prodCodePreviewTimer = setTimeout(r, 180);
   });
   if (token !== refreshProductCodePreviews._tok) return;
-  qrEl.innerHTML = await codes.productQrSvg(pfVal('qrCode'), 148);
+
+  const product = {
+    name: pfVal('name') || 'Product',
+    sku: pfVal('sku') || '',
+    barcode: pfVal('barcode') || '',
+    barcodeNumber: pfVal('barcode') || '',
+    qrCode: pfVal('qrCode') || '',
+    price: Number(pfVal('sellingPrice') || pfVal('price') || 0),
+    salePrice: Number(pfVal('salePrice') || 0) || undefined,
+    categoryName: document.getElementById('pf-categoryId')?.selectedOptions?.[0]?.textContent || '',
+    unitName: pfVal('stockUnitName') || pfVal('unitName') || 'Pcs',
+    batchNumber: pfVal('batchNumber') || '',
+    expiryDate: pfVal('expiryDate') || '',
+    manufacturingDate: pfVal('manufacturingDate') || '',
+  };
+
+  if (bcEl) {
+    if (codes.renderLabelPreview) {
+      bcEl.innerHTML = await codes.renderLabelPreview('barcode', product);
+    } else {
+      bcEl.innerHTML = codes.productBarcodeSvg(product.barcode, 340);
+    }
+  }
+  if (token !== refreshProductCodePreviews._tok) return;
+  if (qrEl) {
+    if (codes.renderLabelPreview) {
+      qrEl.innerHTML = await codes.renderLabelPreview('qr', product);
+    } else {
+      qrEl.innerHTML = await codes.productQrSvg(product.qrCode, 148);
+    }
+  }
 }
 function firstVal(row, keys, fallback = '') {
   for (const key of keys) {
@@ -4711,6 +4760,50 @@ function initProductPanel() {
       setPf('qrCode', code);
     }
   });
+
+  function currentProductFormForLabel() {
+    return {
+      name: pfVal('name') || 'Product',
+      sku: pfVal('sku') || '',
+      barcode: pfVal('barcode') || '',
+      barcodeNumber: pfVal('barcode') || '',
+      qrCode: pfVal('qrCode') || '',
+      price: Number(pfVal('sellingPrice') || pfVal('price') || 0),
+      salePrice: Number(pfVal('salePrice') || 0) || undefined,
+      categoryName: document.getElementById('pf-categoryId')?.selectedOptions?.[0]?.textContent || '',
+      unitName: pfVal('stockUnitName') || pfVal('unitName') || 'Pcs',
+      batchNumber: pfVal('batchNumber') || '',
+      expiryDate: pfVal('expiryDate') || '',
+      manufacturingDate: pfVal('manufacturingDate') || '',
+    };
+  }
+
+  document.getElementById('pf-print-barcode')?.addEventListener('click', async () => {
+    try {
+      if (!window.PosProductCodes?.printProductLabel) throw new Error('Label printer unavailable');
+      await window.PosProductCodes.printProductLabel('barcode', currentProductFormForLabel(), 1);
+    } catch (err) {
+      showToast(err.message || 'Print failed', 'error');
+    }
+  });
+  document.getElementById('pf-print-barcode-qty')?.addEventListener('click', async () => {
+    try {
+      const raw = prompt('How many barcode labels?', '1');
+      if (raw == null) return;
+      const qty = Math.max(1, Math.min(100, Number(raw) || 1));
+      await window.PosProductCodes.printProductLabel('barcode', currentProductFormForLabel(), qty);
+    } catch (err) {
+      showToast(err.message || 'Print failed', 'error');
+    }
+  });
+  document.getElementById('pf-print-qr')?.addEventListener('click', async () => {
+    try {
+      await window.PosProductCodes.printProductLabel('qr', currentProductFormForLabel(), 1);
+    } catch (err) {
+      showToast(err.message || 'Print failed', 'error');
+    }
+  });
+
   document.getElementById('pf-image-add-url')?.addEventListener('click', () => {
     addProdImage(pfVal('imageUrl'));
     setPf('imageUrl', '');

@@ -1,5 +1,5 @@
 const api = window.bisonDesktop;
-const TABS = ['Terminals', 'Users', 'Shifts', 'Sales', 'Returns', 'Receipt', 'Printer', 'Scanner', 'Payments', 'Tax', 'Audit Log'];
+const TABS = ['Terminals', 'Users', 'Shifts', 'Sales', 'Returns', 'Receipt', 'Labels', 'Printer', 'Scanner', 'Payments', 'Tax', 'Audit Log'];
 const SETTINGS_KEY = 'pos_settings_v1';
 
 let page = 1;
@@ -137,6 +137,7 @@ function setTab(name) {
     Sales: 'panel-sales',
     Returns: 'panel-returns',
     Receipt: 'panel-receipt',
+    Labels: 'panel-labels',
     Printer: 'panel-printer',
     Scanner: 'panel-scanner',
     Payments: 'panel-payments',
@@ -155,6 +156,7 @@ async function loadTab() {
   if (currentTab === 'Sales') return loadSales();
   if (currentTab === 'Returns') return loadReturns();
   if (currentTab === 'Receipt') return loadReceipt();
+  if (currentTab === 'Labels') return loadLabelsDesigner();
   if (currentTab === 'Printer' || currentTab === 'Scanner' || currentTab === 'Payments') return loadDevice(currentTab);
   if (currentTab === 'Tax') return loadTax();
   if (currentTab === 'Audit Log') return loadAudit();
@@ -553,6 +555,24 @@ const RECEIPT_TOGGLES = [
   ['showTerminal', 'Terminal'], ['showLoyalty', 'Loyalty points'],
 ];
 
+let labelsDesignerMounted = false;
+async function loadLabelsDesigner() {
+  const wrap = document.getElementById('panel-labels');
+  if (!wrap) return;
+  if (!labelsDesignerMounted) {
+    wrap.innerHTML = `
+      <div class="row"><div><h2>Barcode &amp; QR Labels</h2>
+      <p class="muted">Simple company label settings for product barcode / QR printing.</p></div></div>
+      <div class="card" id="mgmt-label-designer-root"></div>`;
+    if (window.mountLabelDesigner) {
+      await window.mountLabelDesigner('#mgmt-label-designer-root');
+      labelsDesignerMounted = true;
+    } else {
+      wrap.innerHTML += '<p class="muted">Label designer failed to load.</p>';
+    }
+  }
+}
+
 async function loadReceipt() {
   const wrap = document.getElementById('panel-receipt');
   // LOCAL-ONLY: receipt template lives in localStorage only — never synced
@@ -691,12 +711,15 @@ async function loadReceipt() {
     }
   };
 
-  const renderPreview = () => {
+  const renderPreview = async () => {
     const next = collect();
     const comp = window.PosReceipt.resolveReceiptCompany(profile, next);
-    wrap.querySelector('#receipt-preview').innerHTML = window.PosReceipt.buildReceiptHtml(
-      window.PosReceipt.sampleReceiptSale(), comp, next
-    );
+    const sample = window.PosReceipt.sampleReceiptSale();
+    const previewEl = wrap.querySelector('#receipt-preview');
+    previewEl.innerHTML = window.PosReceipt.buildReceiptHtml(sample, comp, next);
+    if (typeof window.PosReceipt.applyLabelScanCodes === 'function') {
+      try { await window.PosReceipt.applyLabelScanCodes(previewEl, sample); } catch (_) { /* ignore */ }
+    }
   };
 
   wrap.querySelector('#r-logo-file')?.addEventListener('change', (e) => {

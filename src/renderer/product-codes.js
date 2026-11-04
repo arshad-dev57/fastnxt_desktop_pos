@@ -200,10 +200,138 @@
     );
   }
 
+  var _companyCache = null;
+  var _companyCacheAt = 0;
+  var _tplCache = { barcode: null, qr: null, at: 0 };
+
+  async function getCompanyProfile() {
+    var now = Date.now();
+    if (_companyCache && now - _companyCacheAt < 30000) return _companyCache;
+    try {
+      if (!global.bisonDesktop || !global.bisonDesktop.pos || !global.bisonDesktop.pos.getProfile) return {};
+      var res = await global.bisonDesktop.pos.getProfile();
+      var p = (res && res.data) || {};
+      var company = p.company || p.businessDetails || p;
+      _companyCache = {
+        name: company.name || company.companyName || company.businessName || p.organizationName || '',
+        logo: company.logo || p.logo || '',
+        logoDataUrl: company.logo || p.logo || '',
+        companyName: company.name || company.companyName || company.businessName || '',
+      };
+      _companyCacheAt = now;
+      return _companyCache;
+    } catch (e) {
+      return _companyCache || {};
+    }
+  }
+
+  async function getDefaultTemplate(kind) {
+    var k = kind === 'qr' ? 'qr' : 'barcode';
+    var now = Date.now();
+    if (_tplCache[k] && now - _tplCache.at < 8000) return _tplCache[k];
+    try {
+      if (!global.bisonDesktop || !global.bisonDesktop.labels) return null;
+      var def = await global.bisonDesktop.labels.getDefault(k);
+      if (def && def.success && def.data) {
+        _tplCache[k] = def.data;
+        _tplCache.at = now;
+        return def.data;
+      }
+    } catch (e) {
+      console.warn('[product-codes] template load failed', e);
+    }
+    return _tplCache[k] || null;
+  }
+
+  /** Clear cached label settings (call after Labels page Save). */
+  function invalidateLabelCache() {
+    _tplCache = { barcode: null, qr: null, at: 0 };
+    _companyCache = null;
+    _companyCacheAt = 0;
+  }
+
+  /**
+   * Preview / display using the company's saved Labels design.
+   * Falls back to plain barcode/QR SVG if templates unavailable.
+   */
+  async function renderLabelPreview(kind, product) {
+    var k = kind === 'qr' ? 'qr' : 'barcode';
+    var prod = product || {};
+    var value = k === 'qr'
+      ? normalizeProductCode(prod.qrCode || prod.qr_code || prod.barcode || prod.sku || '')
+      : normalizeProductCode(prod.barcode || prod.barcodeNumber || prod.sku || '');
+
+    if (!value) {
+      return '<div style="color:#9ca3af;font-size:13px;text-align:center;padding:12px;">' +
+        (k === 'qr' ? 'Scan or enter a QR value' : 'Scan or enter a barcode') + '</div>';
+    }
+
+    try {
+      if (global.PosLabelRender && global.bisonDesktop && global.bisonDesktop.labels) {
+        var tpl = await getDefaultTemplate(k);
+        if (tpl) {
+          var company = await getCompanyProfile();
+          if (tpl.branding && tpl.branding.companyName) company.name = tpl.branding.companyName;
+          if (tpl.branding && tpl.branding.logoDataUrl) {
+            company.logo = tpl.branding.logoDataUrl;
+            company.logoDataUrl = tpl.branding.logoDataUrl;
+          }
+          return await global.PosLabelRender.renderLabelHtml(tpl, prod, company, {});
+        }
+      }
+    } catch (err) {
+      console.warn('[product-codes] label preview failed', err);
+    }
+
+    if (k === 'qr') return productQrSvg(value, 148);
+    return productBarcodeSvg(value, 320);
+  }
+
+  /**
+   * Print using the company's saved default barcode/QR template when available.
+   * Falls back to the legacy simple label if templates API is unavailable.
+   */
+  async function printProductLabel(kind, product, copies) {
+    var k = kind === 'qr' ? 'qr' : 'barcode';
+    var qty = Math.max(1, Number(copies) || 1);
+    var prod = product || {};
+    var value = k === 'qr'
+      ? normalizeProductCode(prod.qrCode || prod.qr_code || prod.barcode || prod.sku || '')
+      : normalizeProductCode(prod.barcode || prod.barcodeNumber || prod.sku || '');
+    if (!value) throw new Error(k === 'qr' ? 'No QR value to print' : 'No barcode to print');
+
+    try {
+      if (global.bisonDesktop && global.bisonDesktop.labels && global.PosLabelRender) {
+        var def = await getDefaultTemplate(k);
+        if (def) {
+          var company = await getCompanyProfile();
+          if (def.branding && def.branding.companyName) company.name = def.branding.companyName;
+          if (def.branding && def.branding.logoDataUrl) {
+            company.logo = def.branding.logoDataUrl;
+            company.logoDataUrl = def.branding.logoDataUrl;
+          }
+          return await global.PosLabelRender.printLabels(def, prod, company, qty);
+        }
+      }
+    } catch (err) {
+      console.warn('[product-codes] template print failed, using legacy', err);
+    }
+
+    var win = window.open('', '_blank');
+    if (!win) throw new Error('Popup blocked');
+    win.document.write(printLabelHtml(k, value, prod.name || prod.productName || ''));
+    win.document.close();
+    return { success: true, legacy: true };
+  }
+
   global.PosProductCodes = {
     normalizeProductCode: normalizeProductCode,
     productBarcodeSvg: productBarcodeSvg,
     productQrSvg: productQrSvg,
     printLabelHtml: printLabelHtml,
+    printProductLabel: printProductLabel,
+    renderLabelPreview: renderLabelPreview,
+    invalidateLabelCache: invalidateLabelCache,
+    getDefaultTemplate: getDefaultTemplate,
   };
 })(window);

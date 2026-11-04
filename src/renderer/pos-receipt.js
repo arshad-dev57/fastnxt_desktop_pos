@@ -252,12 +252,15 @@
     if (s.notes) pay += dash + '<div style="font-size:11px;"><span style="font-weight:700;">Notes: </span>' + esc(s.notes) + '</div>';
 
     var lower = '';
-    if (tpl.showBarcode) {
+    if (tpl.showBarcode !== false) {
       var bcVal = receiptBarcodeValue(s);
       var bcSvg = code128BarcodeSvg(bcVal, paperWidth);
       lower += dash;
-      lower += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 4px;overflow:hidden;">' + bcSvg + '</div>';
-      lower += '<div style="text-align:center;font-size:10px;font-weight:400;">Scan code = receipt #</div>';
+      // Placeholder filled by applyLabelScanCodes() with Labels page barcode/QR design
+      lower += '<div class="receipt-scan-codes" data-receipt-code="' + esc(bcVal) + '" data-paper-width="' + paperWidth + '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 4px;overflow:hidden;">' +
+        bcSvg +
+        '<div style="text-align:center;font-size:10px;font-weight:400;margin-top:4px;">Scan code = receipt #</div>' +
+        '</div>';
     }
     if (tpl.receiptReturnPolicy) lower += '<div style="text-align:center;font-size:11px;font-weight:400;white-space:pre-wrap;">' + esc(tpl.receiptReturnPolicy) + '</div>';
     if (tpl.receiptNotes) lower += '<div style="text-align:center;font-size:11px;font-weight:400;margin-top:8px;white-space:pre-wrap;">' + esc(tpl.receiptNotes) + '</div>';
@@ -710,12 +713,92 @@
     }
   }
 
+  /**
+   * Replace receipt scan-code block with company Labels design (barcode format/colors + QR).
+   * Encodes the same receipt # value so returns scanning still works.
+   */
+  async function applyLabelScanCodes(rootEl, sale) {
+    if (!rootEl) return;
+    var nodes = rootEl.querySelectorAll
+      ? rootEl.querySelectorAll('.receipt-scan-codes')
+      : [];
+    if (!nodes.length) return;
+
+    var value = receiptBarcodeValue(sale || {});
+    var api = global.bisonDesktop;
+    var bcTpl = null;
+    var qrTpl = null;
+    try {
+      if (api && api.labels) {
+        var bRes = await api.labels.getDefault('barcode');
+        var qRes = await api.labels.getDefault('qr');
+        if (bRes && bRes.success) bcTpl = bRes.data;
+        if (qRes && qRes.success) qrTpl = qRes.data;
+      }
+    } catch (e) {
+      console.warn('[receipt] label template load failed', e);
+    }
+
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+      var code = node.getAttribute('data-receipt-code') || value;
+      var paperWidth = Number(node.getAttribute('data-paper-width')) || 320;
+      var parts = [];
+
+      // Barcode — use Labels format/colors when safe; receipt ids stay CODE128 if EAN/UPC won't fit
+      var bc = (bcTpl && bcTpl.barcode) || {};
+      var format = String(bc.format || 'CODE128').toUpperCase();
+      var safeFormat = (format === 'CODE39' || format === 'CODE128') ? format : 'CODE128';
+      var barColor = bc.barColor || '#000000';
+      var drewBc = false;
+      try {
+        if (api && api.codes && typeof api.codes.barcodeSvg === 'function') {
+          var bcRes = await api.codes.barcodeSvg({
+            text: code,
+            format: safeFormat,
+            height: 14,
+            scale: 2,
+            barColor: barColor,
+            bgColor: '#ffffff',
+            showText: bc.showText !== false,
+            quietZone: bc.quietZone || 8,
+          });
+          if (bcRes && bcRes.success && bcRes.svg) {
+            parts.push('<div style="width:100%;display:flex;justify-content:center;line-height:0;">' + bcRes.svg + '</div>');
+            drewBc = true;
+          }
+        }
+      } catch (e) { /* fall through */ }
+      if (!drewBc) parts.push(code128BarcodeSvg(code, paperWidth));
+
+      // QR — from Labels QR settings (same receipt code payload)
+      var qr = (qrTpl && qrTpl.qr) || {};
+      try {
+        if (api && api.codes && typeof api.codes.qrSvg === 'function') {
+          var size = Math.max(72, Math.min(140, Number(qr.size) || 100));
+          var qrRes = await api.codes.qrSvg(code, size, {
+            fgColor: qr.fgColor || '#000000',
+            bgColor: qr.bgColor || '#ffffff',
+            errorCorrection: qr.errorCorrection || 'M',
+          });
+          if (qrRes && qrRes.success && qrRes.svg) {
+            parts.push('<div style="margin-top:8px;display:flex;justify-content:center;line-height:0;">' + qrRes.svg + '</div>');
+          }
+        }
+      } catch (e) { /* ignore */ }
+
+      parts.push('<div style="text-align:center;font-size:10px;font-weight:400;margin-top:6px;">Scan code = receipt #</div>');
+      node.innerHTML = parts.join('');
+    }
+  }
+
   global.PosReceipt = {
     DEFAULT_RECEIPT_TEMPLATE: DEFAULT_RECEIPT_TEMPLATE,
     loadReceiptTemplate: loadReceiptTemplate,
     saveReceiptTemplate: saveReceiptTemplate,
     resolveReceiptCompany: resolveReceiptCompany,
     buildReceiptHtml: buildReceiptHtml,
+    applyLabelScanCodes: applyLabelScanCodes,
     sampleReceiptSale: sampleReceiptSale,
     receiptBarcodeValue: receiptBarcodeValue,
     saleMatchesReceiptScan: saleMatchesReceiptScan,
