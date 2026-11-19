@@ -1,7 +1,4 @@
-/**
- * Desktop env. The Next.js POS keeps its own API_URL / .env.local.
- * This file only decides which web URL the native window opens.
- */
+
 const path = require('path');
 const dotenv = require('dotenv');
 
@@ -44,7 +41,6 @@ function posUrl(origin) {
   return `${stripSlash(origin)}/pos`;
 }
 
-/** After native login, only the POS web UI is allowed. */
 function isDesktopAllowedPath(pathname) {
   const p = pathname || '/';
   if (p.startsWith('/_next') || p.startsWith('/api')) return true;

@@ -5,6 +5,7 @@ const passwordEl = document.getElementById('password');
 const submitBtn = document.getElementById('submit');
 const errorEl = document.getElementById('error');
 const blockedBanner = document.getElementById('blocked-banner');
+const togglePasswordBtn = document.getElementById('toggle-password');
 
 function showError(message) {
   errorEl.textContent = message || 'Login failed';
@@ -22,6 +23,18 @@ function showError(message) {
     showError(msg);
   }
 })();
+
+// Show / hide password
+if (togglePasswordBtn) {
+  togglePasswordBtn.addEventListener('click', () => {
+    const show = passwordEl.type === 'password';
+    passwordEl.type = show ? 'text' : 'password';
+    togglePasswordBtn.classList.toggle('is-on', show);
+    togglePasswordBtn.setAttribute('aria-pressed', String(show));
+    togglePasswordBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    passwordEl.focus();
+  });
+}
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();

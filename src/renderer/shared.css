@@ -180,6 +180,38 @@ button:disabled { opacity: 0.6; cursor: default; }
   outline: 2px solid #0080ff;
   border-color: #0080ff;
 }
+.auth-password-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+.auth-password-wrap .auth-input {
+  padding-right: 42px;
+}
+.auth-password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  border-radius: 6px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.auth-password-toggle:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+.auth-password-toggle:focus-visible {
+  outline: 2px solid #0080ff;
+}
 .btn-primary {
   width: 100%;
   margin-top: 16px;
